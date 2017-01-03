@@ -1,6 +1,5 @@
 package com.baloise.repocleaner;
 
-import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
@@ -22,27 +21,29 @@ public class RepoCleaner {
 	}
 
 	public static void main(String[] args) throws Exception {
-		new RepoCleaner(args).delete(".project", ".cvsignore", ".settings", "*.iml", ".fbwarnings", "bin", "classes", "target");
-		
+		new RepoCleaner(args).clean(".project", ".cvsignore", ".settings", "*.iml", ".fbwarnings", "bin", "classes", "target");
 	}
 
-	private void delete(String ... gitIgnoreRegEx) throws IOException {
+	private void clean(String ... gitIgnoreRegEx) throws IOException {
 		Files.walk(repoRoot).filter(matcher(gitIgnoreRegEx)).
 		forEach(RepoCleaner.this::delete);
 		
 		Files.walk(repoRoot).filter(p -> p.getFileName().toString().equals("pom.xml")).
 		forEach(p -> {
 			GitIgnore ignore = new GitIgnore(p.getParent());
-			log("writing "+ ignore);
 			ignore.add(stream(gitIgnoreRegEx).map(s -> "/"+s));
 			new POMCleaner(p).clean();
 		}
 		);
-		
+		if(LOG.isChanged()) {
+			LOG.info("done");
+		} else {
+			LOG.info("repo was already clean");
+		}
 	}
 	
 	private void delete(Path directory) {
-		log("removing "+ directory);
+		LOG.change("removing "+ directory);
 		try {
 			Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
 				   @Override
@@ -59,17 +60,8 @@ public class RepoCleaner {
 
 			   });
 		} catch (IOException e) {
-			log("removing", directory, e);
+			LOG.exception("removing", directory, e);
 		}
-	}
-
-	private void log(String verb, Path p, IOException e) {
-		System.out.println(format("Exception while %s %s ", verb, p));
-		e.printStackTrace();
-	}
-	
-	private void log(String message) {
-		System.out.println(message);
 	}
 
 	public static Predicate<Path> matcher(String ... gitIgnoreRegEx) {

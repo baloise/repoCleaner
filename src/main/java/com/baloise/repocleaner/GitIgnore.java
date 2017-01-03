@@ -27,25 +27,29 @@ public class GitIgnore {
 		try {
 			return lines(gitIgnore).collect(Collectors.<String>toSet());
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOG.exception("reading", gitIgnore, e);
 			return Collections.<String>emptySet();
 		}
 	}
 
 	public void add(Stream<String> ignores) {
 		Set<String> existing = new TreeSet<>(list());
+		final int originalSize = existing.size();
 		ignores.forEach(existing::add);
-		try (BufferedWriter writer = newBufferedWriter(gitIgnore, StandardOpenOption.CREATE)){
-			writer.write(join("\n", existing));
-		} catch (IOException e) {
-			e.printStackTrace();
-		} 
+		if (existing.size() > originalSize) {
+			LOG.change("writing "+ gitIgnore);
+			try (BufferedWriter writer = newBufferedWriter(gitIgnore, StandardOpenOption.CREATE)) {
+				writer.write(join("\n", existing));
+			} catch (IOException e) {
+				LOG.exception("writing", gitIgnore, e);
+			}
+		}
 	}
 
-	public void add(String ...ignores ) {
+	public void add(String... ignores) {
 		add(stream(ignores));
 	}
-	
+
 	@Override
 	public String toString() {
 		return gitIgnore.toString();
