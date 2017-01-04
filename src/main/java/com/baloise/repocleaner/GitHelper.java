@@ -1,6 +1,7 @@
 package com.baloise.repocleaner;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -30,7 +31,7 @@ public class GitHelper {
 	}
 
 	public List<String> getBranches() throws IOException {
-		return nativeGit(true, "branch", "-r");
+		return nativeGit(true, "branch", "-r").stream().map(String::trim).collect(toList());
 	}
 
 	public void switchBranch(String name) throws IOException {
