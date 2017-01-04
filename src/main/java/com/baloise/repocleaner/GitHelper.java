@@ -33,6 +33,10 @@ public class GitHelper {
 	public List<String> getBranches() throws IOException {
 		return nativeGit(true, "branch", "-r").stream().map(String::trim).collect(toList());
 	}
+	
+	public List<String> getUnmergedBranches() throws IOException {
+		return nativeGit(true, "branch", "-r", "--no-merged").stream().map(String::trim).collect(toList());
+	}
 
 	public void switchBranch(String name) throws IOException {
 		nativeGit("checkout", name);
@@ -45,7 +49,6 @@ public class GitHelper {
 		List<String> cmds = new ArrayList<>(cmd.length + 2);
 		cmds.add("git");
 		cmds.addAll(asList(cmd));
-		LOG.info(cmds);
 		try {
 			ProcessBuilder pb = new ProcessBuilder(cmds).directory(tmp.toFile());
 			if(!returnOutput) {
@@ -73,4 +76,12 @@ public class GitHelper {
 		}
 		return list;
 	}
+	
+//	public static void main(String[] args) throws Exception {
+//		String tmp = "C:\\Windows\\TEMP\\repoCleaner-git-targetcomponent-parsysinterface-git912925806386108389";
+//		GitHelper h = new GitHelper(Paths.get(tmp));
+//		for(String b : h.getLeafBranches()) {
+//			System.out.println(b);
+//		}
+//	}
 }

@@ -1,5 +1,7 @@
 package com.baloise.repocleaner;
 
+import static java.lang.String.format;
+
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URL;
@@ -36,15 +38,22 @@ public class RepoCleanerCLI {
 	private static void clean(URL repo) {
 		try {
 			Path tmp = Files.createTempDirectory("repoCleaner"+repo.getPath().toString().replaceAll("\\W+", "-"));
-//			Path tmp = Paths.get("C:\\Windows\\TEMP\\repoCleaner-https-vcs-balgroupit-com-git-targetcomponent-parsysinterface-git7328709501989105481");
 			GitHelper gitHelper = new GitHelper(tmp);
 			gitHelper.cloneReop(repo);
-			
-			List<String> branches = gitHelper.getBranches();
+			List<String> branches = gitHelper.getUnmergedBranches();
+			List<String> done = new ArrayList<>(branches.size());			
 			branches.stream().forEach((branch) -> {
 				try {
+					done.add(branch);
+					if(branch.contains("->")) {
+						LOG.info("skipping " +branch);
+						return;
+					}
+					LOG.info(format("switching to %s. (%s/%s)",branch, done.size(), branches.size()));
 					gitHelper.switchBranch(branch.replaceFirst("origin/", ""));
+					LOG.info("cleaning "+branch);
 					new RepoCleaner(tmp).clean(cli.files.split(","));
+					LOG.info("committing "+branch);
 					gitHelper.commit("CLEAN "+cli.files);
 				} catch (IOException e) {
 					LOG.exception("cleaning", tmp, e);
