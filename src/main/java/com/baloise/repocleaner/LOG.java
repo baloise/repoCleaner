@@ -12,7 +12,11 @@ public class LOG {
 		return changed;
 	}
 
-	public static void change(String message) {
+	public static void setChanged(boolean changed) {
+		LOG.changed = changed;
+	}
+
+	public static void change(Object message) {
 		changed = true;
 		info(message);
 	}
@@ -22,11 +26,11 @@ public class LOG {
 		e.printStackTrace();
 	}
 
-	public static void error(String message) {
+	public static void error(Object message) {
 		System.err.println(message);
 	}
 	
-	public static void info(String message) {
+	public static void info(Object message) {
 		System.out.println(message);
 		
 	}

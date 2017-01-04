@@ -2,9 +2,9 @@ package com.baloise.repocleaner;
 
 import static java.lang.String.format;
 
+import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -16,6 +16,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 public class POMCleaner {
 
@@ -36,8 +37,11 @@ public class POMCleaner {
 				DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 				Document doc = dBuilder.parse(Files.newInputStream(pom));
 				Element parent = (Element) doc.getElementsByTagName("parent").item(0);
-				if (parent.getElementsByTagName("relativePath").getLength() > 0) {
-					return;
+				if(parent != null ) {
+					NodeList elementsByTagName = parent.getElementsByTagName("relativePath");
+					if (elementsByTagName!= null && elementsByTagName.getLength() > 0) {
+						return;
+					}
 				}
 				String artifactId = parent.getElementsByTagName("artifactId").item(0).getTextContent();
 				final String parentRelativePath = "../" + artifactId;
@@ -48,11 +52,12 @@ public class POMCleaner {
 					parent.appendChild(relativePath);
 
 					DOMSource source = new DOMSource(doc);
-					StreamResult result = new StreamResult(Files.newOutputStream(pom, StandardOpenOption.WRITE));
-					TransformerFactory tFactory = TransformerFactory.newInstance();
-					Transformer transformer = tFactory.newTransformer();
-					transformer.transform(source, result);
-
+					try(FileOutputStream outputStream = new FileOutputStream(pom.toFile())){
+						StreamResult result = new StreamResult(outputStream);
+						TransformerFactory tFactory = TransformerFactory.newInstance();
+						Transformer transformer = tFactory.newTransformer();
+						transformer.transform(source, result);
+					}
 				}
 			} catch (Exception e) {
 				LOG.exception("fixing parent relative path", pom, e);

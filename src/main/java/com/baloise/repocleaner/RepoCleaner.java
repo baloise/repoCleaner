@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.function.Predicate;
@@ -16,15 +15,12 @@ public class RepoCleaner {
 
 	private Path repoRoot;
 
-	public RepoCleaner(String[] args) {
-		repoRoot = Paths.get("C:\\Users\\Public\\dev\\git\\parsysinterface");
+	public RepoCleaner(Path repoRoot) {
+		this.repoRoot = repoRoot;
 	}
-
-	public static void main(String[] args) throws Exception {
-		new RepoCleaner(args).clean(".project", ".cvsignore", ".settings", "*.iml", ".fbwarnings", "bin", "classes", "target");
-	}
-
-	private void clean(String ... gitIgnoreRegEx) throws IOException {
+	
+	public void clean(String ... gitIgnoreRegEx) throws IOException {
+		LOG.setChanged(false);
 		Files.walk(repoRoot).filter(matcher(gitIgnoreRegEx)).
 		forEach(RepoCleaner.this::delete);
 		

@@ -2,13 +2,11 @@ package com.baloise.repocleaner;
 
 import static java.lang.String.join;
 import static java.nio.file.Files.lines;
-import static java.nio.file.Files.newBufferedWriter;
 import static java.util.Arrays.stream;
 
-import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
@@ -24,12 +22,15 @@ public class GitIgnore {
 	}
 
 	public Set<String> list() {
-		try {
-			return lines(gitIgnore).collect(Collectors.<String>toSet());
-		} catch (IOException e) {
-			LOG.exception("reading", gitIgnore, e);
-			return Collections.<String>emptySet();
+		if (gitIgnore.toFile().exists()) {
+			try (Stream<String> lines = lines(gitIgnore)) {
+				return lines.collect(Collectors.<String>toSet());
+			} 
+			catch (IOException e) {
+				LOG.exception("reading", gitIgnore, e);
+			}
 		}
+		return Collections.<String>emptySet();
 	}
 
 	public void add(Stream<String> ignores) {
@@ -37,9 +38,9 @@ public class GitIgnore {
 		final int originalSize = existing.size();
 		ignores.forEach(existing::add);
 		if (existing.size() > originalSize) {
-			LOG.change("writing "+ gitIgnore);
-			try (BufferedWriter writer = newBufferedWriter(gitIgnore, StandardOpenOption.CREATE)) {
-				writer.write(join("\n", existing));
+			LOG.change("writing " + gitIgnore);
+			try (FileOutputStream fos = new FileOutputStream(gitIgnore.toFile())) {
+				fos.write(join("\n", existing).getBytes());
 			} catch (IOException e) {
 				LOG.exception("writing", gitIgnore, e);
 			}
