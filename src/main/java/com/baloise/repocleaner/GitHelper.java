@@ -10,7 +10,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class GitHelper {
@@ -62,26 +61,10 @@ public class GitHelper {
 		}
 	}
 
-	public static List<String> getOutputLines(Process pr) {
-		LinkedList<String> list = new LinkedList<String>();
-		String line;
-		InputStreamReader tempReader = new InputStreamReader(new BufferedInputStream(pr.getInputStream()));
-		BufferedReader oreader = new BufferedReader(tempReader);
-		try {
-			while ((line = oreader.readLine()) != null) {
-				list.add(line);
-			}
-		} catch (IOException e) {
-			System.out.println("Fehler beim Lesen der Ausgabe: \n" + e);
+	public static List<String> getOutputLines(Process pr) throws IOException {
+		try(BufferedReader reader = new BufferedReader(new InputStreamReader(new BufferedInputStream(pr.getInputStream())))){
+			return reader.lines().collect(toList());
 		}
-		return list;
 	}
-	
-//	public static void main(String[] args) throws Exception {
-//		String tmp = "C:\\Windows\\TEMP\\repoCleaner-git-targetcomponent-parsysinterface-git912925806386108389";
-//		GitHelper h = new GitHelper(Paths.get(tmp));
-//		for(String b : h.getLeafBranches()) {
-//			System.out.println(b);
-//		}
-//	}
+
 }
