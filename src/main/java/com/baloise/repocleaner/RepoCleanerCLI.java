@@ -18,7 +18,7 @@ public class RepoCleanerCLI {
 	@Parameter(description = "<the git URLs to clone and clean including credentials>")
 	private List<URL> repoURLs = new ArrayList<>();
 
-	@Parameter(names = { "--help", "-help", "/?" }, description = "display usage", help = true)
+	@Parameter(names = { "--help", "-help", "-h" }, description = "display usage", help = true)
 	private boolean help;
 	
 	@Parameter(names = { "-files", "-f" }, description = "comma seperated file or directory names to remove")
@@ -28,7 +28,7 @@ public class RepoCleanerCLI {
 	public static void main(String[] args) {
 		JCommander jCommander = new JCommander(cli, args);
 		jCommander.setProgramName("repoCleaner");
-		if (cli.help) {
+		if (cli.help || cli.repoURLs.isEmpty()) {
 			jCommander.usage();
 			return;
 		}
