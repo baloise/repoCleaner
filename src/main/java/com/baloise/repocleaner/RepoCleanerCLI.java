@@ -3,6 +3,7 @@ package com.baloise.repocleaner;
 import static java.lang.String.format;
 
 import java.awt.Desktop;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -15,7 +16,7 @@ import com.beust.jcommander.Parameter;
 
 public class RepoCleanerCLI {
 
-	@Parameter(description = "<the git URLs to clone and clean including credentials>")
+	@Parameter(description = "<the git URLs to clone and clean including credentials. file:// URLs will not be cloned>")
 	private List<URL> repoURLs = new ArrayList<>();
 
 	@Parameter(names = { "--help", "-help", "-h" }, description = "display usage", help = true)
@@ -37,8 +38,8 @@ public class RepoCleanerCLI {
 
 	private static void clean(URL repo) {
 		try {
-			Path tmp = Files.createTempDirectory("repoCleaner"+repo.getPath().toString().replaceAll("\\W+", "-"));
-			GitHelper gitHelper = new GitHelper(tmp);
+			Path local = repo.getProtocol().equalsIgnoreCase("file") ? new File(repo.getPath()).toPath() : Files.createTempDirectory("repoCleaner"+repo.getPath().toString().replaceAll("\\W+", "-"));
+			GitHelper gitHelper = new GitHelper(local);
 			gitHelper.cloneReop(repo);
 			List<String> branches = gitHelper.getUnmergedBranches();
 			List<String> done = new ArrayList<>(branches.size());			
@@ -52,18 +53,18 @@ public class RepoCleanerCLI {
 					LOG.info(format("switching to %s. (%s/%s)",branch, done.size(), branches.size()));
 					gitHelper.switchBranch(branch.replaceFirst("origin/", ""));
 					LOG.info("cleaning "+branch);
-					new RepoCleaner(tmp).clean(cli.files.split(","));
+					new RepoCleaner(local).clean(cli.files.split(","));
 					LOG.info("committing "+branch);
 					gitHelper.commit("CLEAN "+cli.files);
 				} catch (IOException e) {
-					LOG.exception("cleaning", tmp, e);
+					LOG.exception("cleaning", local, e);
 				}
 				
 			});
 			if(branches.contains("origin/master")) {
 				gitHelper.switchBranch("master");
 			}
-			Desktop.getDesktop().open(tmp.toFile());
+			Desktop.getDesktop().open(local.toFile());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
