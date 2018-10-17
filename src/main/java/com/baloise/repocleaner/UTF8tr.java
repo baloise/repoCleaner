@@ -141,7 +141,8 @@ public class UTF8tr {
 	protected Set<String> extensionWhitelist = new TreeSet<>(asList(
 			"java", "xml", "properties", 
 			"sql", "txt", "md", "json", "js",
-			"html" , "css", "LICENSE", "confluence", "bsml", "groovy"
+			"html" , "css", "LICENSE", "confluence", "bsml", "groovy",
+			"xtend"
 			));
 
 	protected boolean ignore(Path file) {
@@ -170,7 +171,7 @@ public class UTF8tr {
 	}
 
 	public static void main(String[] args) throws Exception {
-		final Path projectRootDirectory = Paths.get(".");
+		final Path projectRootDirectory = Paths.get(".").toAbsolutePath();
 		final UTF8tr utf8tr = new UTF8tr(projectRootDirectory);
 		utf8tr.fixPOM();
 		utf8tr.fixEncoding();
